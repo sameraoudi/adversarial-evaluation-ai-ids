@@ -1,0 +1,34 @@
+# Config File: configs/datasets/cicids2017.yaml
+# Author: Samer Aoudi
+# Date: 2025-12-22
+# Description: 
+#   Defines the structure and preprocessing rules for the CICIDS2017 dataset.
+#   
+#   Parameters:
+#   - raw: Paths to the source CSV files (MachineLearningCVE version).
+#   - label: The name of the target column ("Label").
+#   - splits: Ratios for Stratified Split (Train=70%, Val=10%, Test=20%).
+#   - scaling: Normalization method (MinMax scaling to [0,1]).
+#
+# Usage:
+#   Loaded by 'src/utils/config.py' and used by 'src/data/preprocess.py'.
+
+dataset_name: cicids2017
+
+raw:
+  # Relative to project root
+  csv_root: data/raw/cicids2017/CSVs
+  csv_subdir: MachineLearningCVE
+  pattern: "*.csv"
+
+label:
+  # After stripping whitespace, this should be the column name
+  column: "Label"
+
+splits:
+  test_size: 0.2
+  val_size: 0.1
+  random_state: 42
+
+scaling:
+  type: "minmax"   # reserved for future (e.g., standard, robust, etc.)
