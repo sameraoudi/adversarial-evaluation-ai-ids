@@ -1,0 +1,48 @@
+# Config File: configs/attacks/cicids2017_whitebox_transfer.yaml
+# Author: Samer Aoudi
+# Date: 2025-12-22
+# Description: 
+#   Configuration for the Adversarial Attack Suite on CICIDS2017.
+#   
+#   This file defines:
+#   1. Global Settings: Random seed, maximum sample count for evaluation.
+#   2. Attack Definitions: A list of attacks (FGSM, PGD, ZOO, HSJA) to execute.
+#   3. Hyperparameters: Epsilon budgets (perturbation magnitude), step sizes, 
+#      and iteration counts for each attack type.
+#
+# Usage:
+#   Loaded by 'scripts/run_attacks_cicids2017.py' to orchestrate the 
+#   generation and transfer of adversarial examples.
+
+dataset_name: cicids2017
+run_name: whitebox_transfer
+seed: 42
+
+# Maximum number of test samples to attack (for runtime).
+max_samples: 20000
+
+attacks:
+  #- type: fgsm
+  #  norm: linf
+  #  eps_list: [0.01, 0.03, 0.05]
+
+  #- type: pgd
+  #  norm: linf
+  #  eps_list: [0.01, 0.03, 0.05]
+  #  num_steps: 20
+  #  step_size: 0.005
+
+  #- type: zoo
+   # norm: linf
+    #eps_list: [0.03]
+    #num_steps: 10
+    #step_size: 0.01
+    #max_samples: 1000    # this will now override global
+    #coords_per_iter: 4
+
+  - type: hsja
+    norm: linf
+    eps_list: [0.03]      # ONE epsilon is enough for HSJA
+    num_steps: 10         # max_iters (was 30 before)
+    step_size: 0.01       # HSJA random perturbation step
+    max_samples: 1000     # <<< KEY: much smaller subset
