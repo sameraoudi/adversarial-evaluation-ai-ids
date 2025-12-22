@@ -1,6 +1,11 @@
 # Adversarial-Robustness-Evaluation-of-AI-IDS
-**Evaluating Adversarial Robustness of AI Intrusion Detection Systems Using Automated Traffic Generation**
 A modular, reproducible, research-grade framework for evaluating adversarial robustness of AI-based intrusion detection systems using CICIDS2017 and CICIDS2018 datasets.
+
+**Supplementary Code for the Paper:**
+*"Evaluating Adversarial Robustness of AI Intrusion Detection Systems Using Automated Traffic Generation"*
+
+**Author:** Dr. Samer Aoudi
+**Target Journal:** Discover Artificial Intelligence
 
 **Overview**
 This repository implements a full experimental pipeline for adversarial robustness evaluation of machine-learning and deep-learning–based Intrusion Detection Systems (IDS).
