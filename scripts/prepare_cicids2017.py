@@ -21,6 +21,9 @@ Outputs:
     - data/processed/cicids2017/splits/test.npz
     - data/artifacts/cicids2017/scaler.pkl
 
+Dependencies:
+    - src.data.preprocess (pandas, numpy, scikit-learn)
+
 Author        : Dr. Samer Aoudi
 Affiliation   : Higher Colleges of Technology (HCT), UAE
 Role          : Assistant Professor & Division Chair (CIS)
@@ -31,9 +34,6 @@ Created On    : 2025-Nov-22
 License       : MIT License
 Citation      : If this code is used in academic work, please cite the
                 corresponding publication or acknowledge the author.
-
-Dependencies:
-    - src.data.preprocess (pandas, numpy, scikit-learn)
 ===============================================================================
 """
 
