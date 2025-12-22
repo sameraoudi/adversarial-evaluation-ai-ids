@@ -25,6 +25,12 @@ Outputs:
     - logs/cicids2017/baseline_rf_lr.log
     - outputs/cicids2017/runs/baseline_rf_lr/ (Metrics & Reports)
 
+Dependencies:
+    - src.models.baselines
+    - src.utils (logging, seeding)
+    - scikit-learn
+    - pyyaml
+
 Author        : Dr. Samer Aoudi
 Affiliation   : Higher Colleges of Technology (HCT), UAE
 Role          : Assistant Professor & Division Chair (CIS)
@@ -35,12 +41,6 @@ Created On    : 2025-Nov-22
 License       : MIT License
 Citation      : If this code is used in academic work, please cite the
                 corresponding publication or acknowledge the author.
-
-Dependencies:
-    - src.models.baselines
-    - src.utils (logging, seeding)
-    - scikit-learn
-    - pyyaml
 ===============================================================================
 """
 
