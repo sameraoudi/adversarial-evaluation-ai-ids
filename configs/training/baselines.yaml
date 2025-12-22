@@ -1,0 +1,33 @@
+# Config File: configs/training/baselines.yaml
+# Author: Samer Aoudi
+# Date: 2025-12-22
+# Description: 
+#   Hyperparameter configuration for Classical Machine Learning Baselines.
+#   
+#   Models Configured:
+#   1. Random Forest (RF): Parameters for ensemble size (n_estimators) and tree depth.
+#   2. Logistic Regression (LR): Parameters for regularization (C), solver, and iterations.
+#   
+#   Note:
+#   - 'n_jobs: -1' enables parallel processing on all available CPU cores.
+#   - 'class_weight: balanced' helps handle the class imbalance in CICIDS2017.
+#
+# Usage:
+#   Loaded by 'scripts/train_baselines_cicids2017.py' to initialize Scikit-Learn models.
+
+dataset_name: cicids2017
+run_name: baseline_rf_lr
+seed: 42
+
+rf:
+  n_estimators: 200
+  max_depth: null        # or an int, e.g. 20
+  n_jobs: -1
+  class_weight: "balanced_subsample"
+
+lr:
+  max_iter: 1000
+  C: 1.0
+  solver: "lbfgs"
+  n_jobs: -1
+  class_weight: "balanced"
