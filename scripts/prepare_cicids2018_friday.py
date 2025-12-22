@@ -24,6 +24,10 @@ Outputs:
     - data/processed/cicids2018_friday/splits/test.npz
     - data/artifacts/cicids2018_friday/scaler.pkl
 
+Dependencies:
+    - src.data.preprocess_cicids2018
+    - src.utils.logging_utils
+
 Author        : Dr. Samer Aoudi
 Affiliation   : Higher Colleges of Technology (HCT), UAE
 Role          : Assistant Professor & Division Chair (CIS)
@@ -34,10 +38,6 @@ Created On    : 2025-Nov-22
 License       : MIT License
 Citation      : If this code is used in academic work, please cite the
                 corresponding publication or acknowledge the author.
-
-Dependencies:
-    - src.data.preprocess_cicids2018
-    - src.utils.logging_utils
 ===============================================================================
 """
 from __future__ import annotations
