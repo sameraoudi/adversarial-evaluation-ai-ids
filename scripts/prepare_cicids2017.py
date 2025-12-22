@@ -9,11 +9,11 @@ Description   : Executes the complete preprocessing pipeline for the CICIDS2017 
                 4. Performing a stratified train (70%), validation (10%), and test (20%) split.
                 5. Saving processed artifacts (scaler, label mappings) and split data (.npz).
 
-How to Run    :
-                python scripts/prepare_cicids2017.py
+Usage:
+    python scripts/prepare_cicids2017.py
 
-Inputs        :
-                data/raw/cicids2017/CSVs/MachineLearningCVE/*.csv (Raw Traffic Data)
+Inputs:
+    data/raw/cicids2017/CSVs/MachineLearningCVE/*.csv (Raw Traffic Data)
 
 Outputs:
     - data/processed/cicids2017/splits/train.npz
@@ -31,14 +31,6 @@ Created On    : 2025-Nov-22
 License       : MIT License
 Citation      : If this code is used in academic work, please cite the
                 corresponding publication or acknowledge the author.
-
-Design Notes :
-- This script intentionally contains minimal logic and delegates all
-  preprocessing responsibilities to `prepare_dataset_cicids_style`.
-- Centralizing preprocessing logic ensures identical transformations are
-  applied across CICIDS2017 and related datasets (e.g., CICIDS2018).
-- Any changes to feature handling, normalization, or label mapping should
-  be implemented in the shared preprocessing module, not here.
 
 Dependencies:
     - src.data.preprocess (pandas, numpy, scikit-learn)
