@@ -1,0 +1,52 @@
+# Config File: configs/training/deep.yaml
+# Author: Samer Aoudi
+# Date: 2025-12-22
+# Description: 
+#   Hyperparameter configuration for Deep Learning Models.
+#   
+#   Models Configured:
+#   1. MLP (Target): Fully connected network architecture and training schedule.
+#   2. CNN-1D (Target): Convolutional network parameters (kernels, channels).
+#   3. Surrogate (Shadow): Configuration for the Black-Box Attack Surrogate model.
+#   
+#   Key Parameters:
+#   - Architecture: hidden_dims (MLP), channels/kernel_sizes (CNN).
+#   - Optimization: lr (learning rate), weight_decay (L2 reg), batch_size.
+#   - Regularization: dropout, early_stopping_patience.
+#
+# Usage:
+#   Loaded by 'scripts/train_deep_cicids2017.py' to initialize PyTorch models.
+
+dataset_name: cicids2017
+run_name: deep_mlp_cnn
+seed: 42
+
+mlp:
+  enabled: true
+  hidden_dims: [256, 128]
+  dropout: 0.3
+  batch_size: 1024
+  max_epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 5
+
+cnn1d:
+  enabled: true
+  channels: [32, 64]
+  kernel_sizes: [3, 3]
+  dropout: 0.3
+  batch_size: 1024
+  max_epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 5
+
+surrogate:
+  # which base architecture to use for surrogate ("mlp" or "cnn1d")
+  base: "mlp"
+  # optional overrides for surrogate training
+  max_epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 5
