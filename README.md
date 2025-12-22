@@ -4,7 +4,7 @@ A modular, reproducible, research-grade framework for evaluating adversarial rob
 **Supplementary Code for the Paper:**
 *"Evaluating Adversarial Robustness of AI Intrusion Detection Systems Using Automated Traffic Generation"*
 
-**Author:** Dr. Samer Aoudi
+**Author:** Dr. Samer Aoudi  
 **Target Journal:** Discover Artificial Intelligence
 
 **Overview**
