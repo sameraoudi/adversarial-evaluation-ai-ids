@@ -1,6 +1,6 @@
 """
 ===============================================================================
-Script Name   : run_attacks_cicids2018_friday.py
+Script Name   : utils.py
 Description   : Utility functions for adversarial perturbation constraints and projections.
                 Key Functions:
                 - project_lp_ball: Projects perturbations back into the L-inf or L2 ball.
