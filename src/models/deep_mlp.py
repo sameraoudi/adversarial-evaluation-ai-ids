@@ -29,11 +29,12 @@ Citation      : If this code is used in academic work, please cite the
 ===============================================================================
 """
 
-# src/models/deep_cnn1d.py
+# src/models/deep_mlp.py
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Tuple, Dict, Any
 
 import numpy as np
@@ -49,11 +50,10 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class CNN1DConfig:
+class MLPConfig:
     input_dim: int
     num_classes: int
-    channels: List[int]
-    kernel_sizes: List[int]
+    hidden_dims: List[int]
     dropout: float = 0.3
     batch_size: int = 1024
     max_epochs: int = 30
@@ -63,57 +63,34 @@ class CNN1DConfig:
     seed: int = 42
 
 
-class CNN1D(nn.Module):
-    """
-    A simple 1D-CNN treating features as a length-N sequence (1 channel).
-    """
-
-    def __init__(
-        self,
-        input_dim: int,
-        num_classes: int,
-        channels: List[int],
-        kernel_sizes: List[int],
-        dropout: float = 0.3,
-    ):
+class MLP(nn.Module):
+    def __init__(self, input_dim: int, num_classes: int, hidden_dims: List[int], dropout: float = 0.3):
         super().__init__()
-        assert len(channels) == len(kernel_sizes), "channels and kernel_sizes must match length"
+        layers: List[nn.Module] = []
+        prev_dim = input_dim
 
-        conv_layers: List[nn.Module] = []
-        in_channels = 1
-        current_length = input_dim
+        for h in hidden_dims:
+            layers.append(nn.Linear(prev_dim, h))
+            layers.append(nn.BatchNorm1d(h))
+            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.Dropout(dropout))
+            prev_dim = h
 
-        for out_ch, k in zip(channels, kernel_sizes):
-            conv_layers.append(nn.Conv1d(in_channels, out_ch, kernel_size=k, padding="same"))
-            conv_layers.append(nn.BatchNorm1d(out_ch))
-            conv_layers.append(nn.ReLU(inplace=True))
-            conv_layers.append(nn.Dropout(dropout))
-            in_channels = out_ch
-
-        self.conv = nn.Sequential(*conv_layers)
-
-        # After conv, shape: (B, C_last, input_dim) due to padding="same"
-        # We'll global-average-pool over the sequence dimension
-        self.pool = nn.AdaptiveAvgPool1d(1)
-
-        # Final classifier
-        last_channels = channels[-1] if channels else 1
-        self.fc = nn.Linear(last_channels, num_classes)
+        layers.append(nn.Linear(prev_dim, num_classes))
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x: (B, input_dim) -> (B, 1, input_dim)
-        x = x.unsqueeze(1)
-        x = self.conv(x)
-        x = self.pool(x)  # (B, C, 1)
-        x = x.squeeze(-1)  # (B, C)
-        logits = self.fc(x)
-        return logits
+        return self.net(x)
 
 
 def _build_dataloaders(
     dataset_name: str,
     batch_size: int,
 ) -> Tuple[DataLoader, DataLoader, DataLoader, int, int]:
+    """
+    Load train/val/test splits from npz and wrap them in DataLoaders.
+    Returns loaders and (input_dim, num_classes).
+    """
     splits_dir = get_splits_dir(dataset_name)
     train = load_npz(splits_dir / "train.npz")
     val = load_npz(splits_dir / "val.npz")
@@ -127,7 +104,7 @@ def _build_dataloaders(
     num_classes = int(np.max(y_train)) + 1
 
     logger.info(
-        "CNN1D data: train=%d, val=%d, test=%d, features=%d, classes=%d",
+        "MLP data: train=%d, val=%d, test=%d, features=%d, classes=%d",
         X_train.shape[0],
         X_val.shape[0],
         X_test.shape[0],
@@ -135,6 +112,7 @@ def _build_dataloaders(
         num_classes,
     )
 
+    # Convert to tensors
     X_train_t = torch.from_numpy(X_train)
     y_train_t = torch.from_numpy(y_train)
     X_val_t = torch.from_numpy(X_val)
@@ -158,6 +136,9 @@ def _evaluate_model(
     loader: DataLoader,
     device: torch.device,
 ) -> Tuple[float, float]:
+    """
+    Evaluate model on a loader and return (loss, accuracy).
+    """
     model.eval()
     criterion = nn.CrossEntropyLoss()
     total_loss = 0.0
@@ -171,8 +152,8 @@ def _evaluate_model(
 
             logits = model(X)
             loss = criterion(logits, y)
-
             total_loss += loss.item() * X.size(0)
+
             preds = torch.argmax(logits, dim=1)
             total_correct += (preds == y).sum().item()
             total_samples += X.size(0)
@@ -182,13 +163,15 @@ def _evaluate_model(
     return avg_loss, acc
 
 
-def train_cnn1d(
+def train_mlp(
     dataset_name: str,
     run_name: str,
-    cfg: CNN1DConfig,
+    cfg: MLPConfig,
 ) -> Dict[str, Any]:
     """
-    Train a 1D-CNN baseline on the CICIDS-style splits with early stopping.
+    Train an MLP on the CICIDS-style splits with early stopping on val loss.
+
+    Returns a dict with basic metrics and the path to the best checkpoint.
     """
     set_global_seed(cfg.seed)
 
@@ -196,15 +179,15 @@ def train_cnn1d(
         dataset_name, cfg.batch_size
     )
 
+    # Update input_dim/num_classes in case config placeholders were used
     cfg.input_dim = input_dim
     cfg.num_classes = num_classes
 
     device = torch.device("cpu")
-    model = CNN1D(
+    model = MLP(
         input_dim=input_dim,
         num_classes=num_classes,
-        channels=cfg.channels,
-        kernel_sizes=cfg.kernel_sizes,
+        hidden_dims=cfg.hidden_dims,
         dropout=cfg.dropout,
     ).to(device)
 
@@ -216,20 +199,20 @@ def train_cnn1d(
     )
 
     models_root = get_models_root(dataset_name)
-    cnn_dir = models_root / "deep" / "cnn1d"
-    cnn_dir.mkdir(parents=True, exist_ok=True)
-    best_ckpt_path = cnn_dir / f"{run_name}_best.pt"
+    mlp_dir = models_root / "deep" / "mlp"
+    mlp_dir.mkdir(parents=True, exist_ok=True)
+    best_ckpt_path = mlp_dir / f"{run_name}_best.pt"
 
     outputs_root = get_outputs_root(dataset_name)
     run_dir = outputs_root / "runs" / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
-    metrics_path = run_dir / "cnn1d_metrics.txt"
+    metrics_path = run_dir / "mlp_metrics.txt"
 
     best_val_loss = float("inf")
     best_state_dict = None
     patience_counter = 0
 
-    logger.info("Starting CNN1D training for up to %d epochs", cfg.max_epochs)
+    logger.info("Starting MLP training for up to %d epochs", cfg.max_epochs)
 
     for epoch in range(1, cfg.max_epochs + 1):
         model.train()
@@ -253,13 +236,14 @@ def train_cnn1d(
         val_loss, val_acc = _evaluate_model(model, val_loader, device)
 
         logger.info(
-            "[CNN1D][Epoch %d] train_loss=%.6f val_loss=%.6f val_acc=%.4f",
+            "[MLP][Epoch %d] train_loss=%.6f val_loss=%.6f val_acc=%.4f",
             epoch,
             train_loss,
             val_loss,
             val_acc,
         )
 
+        # Early stopping
         if val_loss < best_val_loss - 1e-6:
             best_val_loss = val_loss
             best_state_dict = model.state_dict()
@@ -274,15 +258,19 @@ def train_cnn1d(
                 )
                 break
 
+    # Load best weights
     if best_state_dict is not None:
         model.load_state_dict(best_state_dict)
 
+    # Final test evaluation
     test_loss, test_acc = _evaluate_model(model, test_loader, device)
-    logger.info("[CNN1D] Final test_loss=%.6f test_acc=%.4f", test_loss, test_acc)
+    logger.info("[MLP] Final test_loss=%.6f test_acc=%.4f", test_loss, test_acc)
 
+    # Save best checkpoint
     torch.save(model.state_dict(), best_ckpt_path)
-    logger.info("Saved best CNN1D checkpoint to %s", best_ckpt_path)
+    logger.info("Saved best MLP checkpoint to %s", best_ckpt_path)
 
+    # Save simple metrics text file
     with metrics_path.open("w", encoding="utf-8") as f:
         f.write(f"best_val_loss: {best_val_loss:.6f}\n")
         f.write(f"test_loss: {test_loss:.6f}\n")
