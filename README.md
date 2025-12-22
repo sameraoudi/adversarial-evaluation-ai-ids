@@ -1,5 +1,5 @@
 # Adversarial-Robustness-Evaluation-of-AI-IDS
-**Security Testing of AI-Based Intrusion Detection Systems Using Automated Adversarial Traffic Generation**
+**Evaluating Adversarial Robustness of AI Intrusion Detection Systems Using Automated Traffic Generation**
 A modular, reproducible, research-grade framework for evaluating adversarial robustness of AI-based intrusion detection systems using CICIDS2017 and CICIDS2018 datasets.
 
 **Overview**
@@ -106,7 +106,10 @@ Adversarial-Robustness-Evaluation-AI-IDS/
 |
 `-- README.md
 ```
-
+**Prerequisites**
+1. Python 3.10
+2. CICIDS2017 Dataset (CSV)
+3. CICIDS2018 Dataset (Friday Slice)
 
 **Installation**
 1. Install Python (3.10 recommended) 
@@ -120,14 +123,22 @@ venv\Scripts\activate      # Windows
 3. Install dependencies
 pip install -r requirements.txt
 
-Ensure PyTorch CPU version is installed:
-pip install torch --index-url https://download.pytorch.org/whl/cpu
+   Ensure PyTorch CPU version is installed:  
+   pip install torch --index-url https://download.pytorch.org/whl/cpu
 
-**Dataset Preparation**
-**CICIDS2017**
+5. Data Setup  
+   -Download the MachineLearningCVE version of CICIDS2017.  
+   -Place the CSV files in: data/raw/cicids2017/CSVs/MachineLearningCVE/  
+   -(Optional) For cross-dataset testing, place CICIDS2018 CSVs in: data/raw/cicids2018/
+
+**Reproducibility Workflow**  
+To reproduce the results presented in the paper, follow these steps in order:
+
+**Step 1 Dataset Preparation (Preprocessing)**  
+**CICIDS2017**  
 python -m scripts.prepare_cicids2017
 
-**CICIDS2018 Friday Slice**
+**CICIDS2018 Friday Slice**  
 python -m scripts.prepare_cicids2018_friday
 
 
@@ -137,27 +148,27 @@ These scripts:
 - Produce reproducible train/val/test splits
 - Save artifacts (scaler, label map, constraints)
 
-**Training IDS Models**
-**Classical Models (RF, LR)**
+**Training IDS Models**  
+**Classical Models (RF, LR)**  
 python -m scripts.train_baselines_cicids2017
 
-**Deep Models (MLP, CNN1D, Surrogate)**
+**Deep Models (MLP, CNN1D, Surrogate)**  
 python -m scripts.train_deep_cicids2017
 
-All models are saved automatically under:
+All models are saved automatically under:  
 artifacts/cicids2017/models/
 
-**Running Adversarial Attacks**
-**On CICIDS2017 (in-distribution)**
+**Running Adversarial Attacks**  
+**On CICIDS2017 (in-distribution)**  
 python -m scripts.run_attacks_cicids2017
 
-**On CICIDS2018 (cross-dataset)**
+**On CICIDS2018 (cross-dataset)**  
 python -m scripts.run_attacks_cicids2018_friday
 
-Outputs (CSV tables) will appear under:
+Outputs (CSV tables) will appear under:  
 outputs/<dataset>/adv/runs/<run_name>/
 
-**Evaluation Metrics**
+**Evaluation Metrics**  
 The framework computes:
 - Clean accuracy
 - Adversarial accuracy
