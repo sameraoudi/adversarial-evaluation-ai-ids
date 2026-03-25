@@ -1,0 +1,41 @@
+# Phase 2: Tree-Aware Attacks for Random Forest
+# Addresses Reviewer #2: "gradient-based attacks are unsuited for tree ensembles"
+
+dataset_name: cicids2017
+seed: 42
+
+# Evaluation subset sizes (documented in output)
+# - greedy_tree: O(n_trees × depth²) per sample → 5K samples
+# - fi_search:   O(n_iterations) RF queries per sample → 5K samples
+# - boundary:    O(n_find_initial + n_iterations) RF queries per sample → 5K samples
+# All three use the same 5K stratified subset drawn from the Phase 1 20K subset (seed=42).
+max_samples: 5000
+
+attacks:
+  eps_list: [0.01, 0.03, 0.05]
+
+  greedy_tree:
+    # Kantchelian-style single-split-flip greedy attack
+    # For each tree: trace natural path, at each split compute min L∞ cost
+    # to force the other branch and flip tree prediction.
+    # Greedily apply cheapest flips until majority vote changes.
+    enabled: true
+
+  feature_importance:
+    # Importance-weighted random search
+    # All candidates generated in ONE batch per sample → single RF.predict() call.
+    # n_iterations=200: generates 200 candidates, one predict(200,80) call per sample.
+    n_iterations: 200
+    n_perturb_features: 20  # features perturbed per candidate
+    enabled: true
+
+  boundary:
+    # Simplified decision-based boundary walk
+    n_find_initial: 2500  # random trials to find initial adversarial starting point
+    n_iterations: 200     # walk-toward-original iterations
+    enabled: true
+
+bootstrap:
+  n_iterations: 1000
+  confidence: 0.95
+  seed: 42
