@@ -1,0 +1,128 @@
+# Phase 6: Cross-Dataset Evaluation
+# Addresses R6: "CICIDS2017-trained models on CICIDS2018 produced meaningless baselines"
+# Each dataset gets its own models, surrogates, normalization statistics.
+# Cross-dataset transfer only between feature-compatible datasets (CICIDS2017 ↔ CICIDS2018).
+
+seed: 42
+device: cuda
+
+# ---------------------------------------------------------------------------
+# Datasets
+# ---------------------------------------------------------------------------
+datasets:
+  cicids2018:
+    raw_dir: data/raw/cicids2018
+    pattern: "*.csv"
+    label_col: Label
+    drop_cols: [Timestamp]
+    benign_labels: [Benign, benign]
+    # Note: column names are remapped to CICIDS2017 canonical names
+    max_rows: null    # use all ~6.6M rows
+    cap_rows: 1500000 # stratified subsample if >1.5M (after cleaning)
+
+  unsw_nb15:
+    train_file: data/raw/unsw-nb15/UNSW_NB15_training-set.csv
+    test_file: data/raw/unsw-nb15/UNSW_NB15_testing-set.csv
+    label_col: label
+    drop_cols: [id, attack_cat]
+    categorical_cols: [proto, service, state]
+    benign_label: 0
+
+  ciciot2023:
+    raw_dir: data/raw/ciciot2023
+    pattern: "Merged*.csv"
+    label_col: Label
+    benign_labels: [BENIGN]
+    sample_rows: 1000000  # stratified sample from ~45M
+
+splits:
+  test_size: 0.2
+  val_size: 0.1
+  random_state: 42
+
+# ---------------------------------------------------------------------------
+# Target models
+# ---------------------------------------------------------------------------
+rf:
+  n_estimators: 100
+  criterion: gini
+  class_weight: balanced
+  random_state: 42
+  n_jobs: -1
+
+lr:
+  C: 1.0
+  solver: lbfgs
+  max_iter: 1000
+  class_weight: balanced
+  random_state: 42
+
+mlp:
+  hidden_dims: [256, 128]
+  dropout: 0.3
+  batch_size: 256
+  max_epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 5
+
+cnn1d:
+  channels: [32, 64]
+  kernel_sizes: [3, 3]
+  dropout: 0.3
+  batch_size: 256
+  max_epochs: 30
+  lr: 0.001
+  weight_decay: 0.0001
+  early_stopping_patience: 5
+
+# ---------------------------------------------------------------------------
+# Surrogate models (same 3 architectures as Phase 1)
+# ---------------------------------------------------------------------------
+surrogates:
+  lr_surrogate:
+    lr: 0.001
+    batch_size: 512
+    epochs: 30
+    early_stopping_patience: 5
+
+  gbt_distill:
+    # XGBoost teacher
+    xgb_n_estimators: 300
+    xgb_max_depth: 6
+    xgb_lr: 0.1
+    # Distillation net (512→256, GELU)
+    distill_lr: 0.001
+    distill_batch_size: 512
+    distill_epochs: 30
+    distill_patience: 5
+    temperature: 4.0
+
+  cnn_v2:
+    # 3-layer CNN (16/32/64, kernel=5, LeakyReLU, BatchNorm, GlobalAvgPool)
+    channels: [16, 32, 64]
+    kernel_size: 5
+    lr: 0.001
+    batch_size: 512
+    epochs: 30
+    early_stopping_patience: 5
+
+# ---------------------------------------------------------------------------
+# Adversarial evaluation
+# ---------------------------------------------------------------------------
+eval:
+  n_eval: 20000         # Stratified subset of test set
+  epsilon_levels: [0.01, 0.03, 0.05]
+  pgd_steps: 40
+  pgd_step_size_ratio: 0.25   # step_size = eps * ratio
+  bootstrap_iters: 1000
+  bootstrap_ci: 0.95
+
+# ---------------------------------------------------------------------------
+# Cross-dataset transfer (CICIDS2017 ↔ CICIDS2018 only)
+# ---------------------------------------------------------------------------
+cross_dataset:
+  pairs:
+    - [cicids2017, cicids2018]
+    - [cicids2018, cicids2017]
+  n_eval: 20000
