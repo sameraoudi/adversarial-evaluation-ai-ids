@@ -1,0 +1,420 @@
+# CICIDS2017 CICFlowMeter Feature Taxonomy — 80 features (indices 0–79)
+#
+# Categories:
+#   immutable        — Cannot be changed without altering the attack type or protocol.
+#                      ε = 0.
+#   backward_response— Server-side features; attacker cannot directly control them.
+#                      ε = 0.
+#   flags            — Discrete TCP flag counts; continuous perturbation is semantically
+#                      invalid (flags are integers 0 or 1, not real-valued).
+#                      ε = 0.
+#   increase_only    — Attacker can ADD bytes/packets/delays but cannot REMOVE already-
+#                      sent data. Positive perturbation only; ε > 0.
+#   derived          — Mathematically determined by other features (rates, ratios, sums).
+#                      Perturbed bidirectionally with same ε; changes implied by source
+#                      features. ε > 0.
+#   bidirectional    — Attacker-controllable in both directions. Full ε range. ε > 0.
+#
+# non_perturbable_count : immutable + backward_response + flags = 1 + 22 + 10 = 33
+# perturbable_count     : increase_only + derived + bidirectional = 14 + 9 + 24 = 47
+
+features:
+  - index: 0
+    name: "Source Port"
+    category: bidirectional
+    justification: "Attacker freely chooses ephemeral source port (any ≥1024); direction unconstrained."
+
+  - index: 1
+    name: "Destination Port"
+    category: bidirectional
+    justification: "Attacker selects target service port; can probe on different ports."
+
+  - index: 2
+    name: "Protocol"
+    category: immutable
+    justification: "TCP/UDP/ICMP is fixed by the attack type; changing it changes the flow entirely."
+
+  - index: 3
+    name: "Flow Duration"
+    category: increase_only
+    justification: "Attacker can delay the final packet to extend duration; cannot shorten a flow in retrospect."
+
+  - index: 4
+    name: "Total Fwd Packets"
+    category: increase_only
+    justification: "Attacker can inject additional forward packets (padding/keepalives); cannot remove sent packets."
+
+  - index: 5
+    name: "Total Backward Packets"
+    category: backward_response
+    justification: "Number of server response packets; determined by the server, not the attacker."
+
+  - index: 6
+    name: "Total Length of Fwd Packets"
+    category: increase_only
+    justification: "Attacker can pad payload bytes; cannot retroactively reduce bytes already sent."
+
+  - index: 7
+    name: "Total Length of Bwd Packets"
+    category: backward_response
+    justification: "Total server response payload size; server-controlled."
+
+  - index: 8
+    name: "Fwd Packet Length Max"
+    category: increase_only
+    justification: "Attacker can send a larger maximum packet; cannot reduce max of already-sent packets."
+
+  - index: 9
+    name: "Fwd Packet Length Min"
+    category: bidirectional
+    justification: "Attacker can send smaller or larger minimum packets by varying payload size."
+
+  - index: 10
+    name: "Fwd Packet Length Mean"
+    category: bidirectional
+    justification: "Mean packet size changes with payload distribution; attacker can vary up or down."
+
+  - index: 11
+    name: "Fwd Packet Length Std"
+    category: bidirectional
+    justification: "Variability of packet sizes; attacker controls by mixing large/small packets."
+
+  - index: 12
+    name: "Bwd Packet Length Max"
+    category: backward_response
+    justification: "Maximum server response packet size; server-determined."
+
+  - index: 13
+    name: "Bwd Packet Length Min"
+    category: backward_response
+    justification: "Minimum server response packet size; server-determined."
+
+  - index: 14
+    name: "Bwd Packet Length Mean"
+    category: backward_response
+    justification: "Mean server response size; server-determined."
+
+  - index: 15
+    name: "Bwd Packet Length Std"
+    category: backward_response
+    justification: "Std of server response sizes; server-determined."
+
+  - index: 16
+    name: "Flow Bytes/s"
+    category: derived
+    justification: "Derived: (Total Fwd Bytes + Total Bwd Bytes) / Flow Duration. Changes as consequence of other perturbations."
+
+  - index: 17
+    name: "Flow Packets/s"
+    category: derived
+    justification: "Derived: (Total Fwd Packets + Total Bwd Packets) / Flow Duration."
+
+  - index: 18
+    name: "Flow IAT Mean"
+    category: bidirectional
+    justification: "Mean inter-arrival time across all flow packets; attacker can add delays (increase) or send bursts (decrease)."
+
+  - index: 19
+    name: "Flow IAT Std"
+    category: bidirectional
+    justification: "Timing regularity; attacker can make timing more or less regular."
+
+  - index: 20
+    name: "Flow IAT Max"
+    category: bidirectional
+    justification: "Maximum inter-arrival time; attacker can introduce or eliminate large gaps."
+
+  - index: 21
+    name: "Flow IAT Min"
+    category: bidirectional
+    justification: "Minimum inter-arrival time; attacker can speed up or slow down the minimum gap."
+
+  - index: 22
+    name: "Fwd IAT Total"
+    category: increase_only
+    justification: "Total inter-arrival time in forward direction equals Flow Duration; can only be extended."
+
+  - index: 23
+    name: "Fwd IAT Mean"
+    category: bidirectional
+    justification: "Mean forward IAT; attacker controls by varying timing of forward packets."
+
+  - index: 24
+    name: "Fwd IAT Std"
+    category: bidirectional
+    justification: "Variability of forward timing; attacker can regularise or randomise."
+
+  - index: 25
+    name: "Fwd IAT Max"
+    category: increase_only
+    justification: "Attacker can insert a large forward delay (increase max IAT); cannot remove an already-long gap."
+
+  - index: 26
+    name: "Fwd IAT Min"
+    category: bidirectional
+    justification: "Minimum forward gap; attacker can send faster (decrease) or add minimum delay (increase)."
+
+  - index: 27
+    name: "Bwd IAT Total"
+    category: backward_response
+    justification: "Total backward inter-arrival time; server response timing."
+
+  - index: 28
+    name: "Bwd IAT Mean"
+    category: backward_response
+    justification: "Mean server response interval; server-determined."
+
+  - index: 29
+    name: "Bwd IAT Std"
+    category: backward_response
+    justification: "Variability of server response timing; server-determined."
+
+  - index: 30
+    name: "Bwd IAT Max"
+    category: backward_response
+    justification: "Maximum server response interval; server-determined."
+
+  - index: 31
+    name: "Bwd IAT Min"
+    category: backward_response
+    justification: "Minimum server response interval; server-determined."
+
+  - index: 32
+    name: "Fwd PSH Flags"
+    category: flags
+    justification: "Count of PSH flag in forward direction; discrete TCP flag, not continuously perturbable."
+
+  - index: 33
+    name: "Bwd PSH Flags"
+    category: backward_response
+    justification: "PSH flag count in server direction; server-controlled."
+
+  - index: 34
+    name: "Fwd URG Flags"
+    category: flags
+    justification: "Count of URG flag in forward direction; discrete, not continuously perturbable."
+
+  - index: 35
+    name: "Bwd URG Flags"
+    category: backward_response
+    justification: "URG flag count in server direction; server-controlled."
+
+  - index: 36
+    name: "Fwd Header Length"
+    category: derived
+    justification: "Derived from IP/TCP header size (fixed by protocol version + options); not independently controllable."
+
+  - index: 37
+    name: "Bwd Header Length"
+    category: backward_response
+    justification: "Server-side header length; server-determined."
+
+  - index: 38
+    name: "Fwd Packets/s"
+    category: derived
+    justification: "Derived: Total Fwd Packets / Flow Duration. Changes as a consequence of packets/duration perturbations."
+
+  - index: 39
+    name: "Bwd Packets/s"
+    category: backward_response
+    justification: "Derived from backward packet count / duration; server-determined."
+
+  - index: 40
+    name: "Min Packet Length"
+    category: bidirectional
+    justification: "Minimum packet length over entire flow; attacker can vary minimum packet size."
+
+  - index: 41
+    name: "Max Packet Length"
+    category: increase_only
+    justification: "Attacker can send a larger maximum-size packet; cannot undo the largest packet already sent."
+
+  - index: 42
+    name: "Packet Length Mean"
+    category: bidirectional
+    justification: "Mean packet size over the whole flow (fwd+bwd); partially attacker-controlled."
+
+  - index: 43
+    name: "Packet Length Std"
+    category: bidirectional
+    justification: "Standard deviation of all packet sizes; attacker controls by varying forward packet sizes."
+
+  - index: 44
+    name: "Packet Length Variance"
+    category: derived
+    justification: "Derived: Packet Length Std². Changes as a consequence of Std perturbation."
+
+  - index: 45
+    name: "FIN Flag Count"
+    category: flags
+    justification: "Count of TCP FIN flags; discrete, not continuously perturbable."
+
+  - index: 46
+    name: "SYN Flag Count"
+    category: flags
+    justification: "Count of TCP SYN flags; discrete, not continuously perturbable."
+
+  - index: 47
+    name: "RST Flag Count"
+    category: flags
+    justification: "Count of TCP RST flags; discrete, not continuously perturbable."
+
+  - index: 48
+    name: "PSH Flag Count"
+    category: flags
+    justification: "Count of TCP PSH flags over entire flow; discrete, not continuously perturbable."
+
+  - index: 49
+    name: "ACK Flag Count"
+    category: flags
+    justification: "Count of TCP ACK flags; discrete, not continuously perturbable."
+
+  - index: 50
+    name: "URG Flag Count"
+    category: flags
+    justification: "Count of TCP URG flags; discrete, not continuously perturbable."
+
+  - index: 51
+    name: "CWE Flag Count"
+    category: flags
+    justification: "Count of TCP CWE (Congestion Window Experienced) flags; discrete."
+
+  - index: 52
+    name: "ECE Flag Count"
+    category: flags
+    justification: "Count of TCP ECE (ECN Echo) flags; discrete, not continuously perturbable."
+
+  - index: 53
+    name: "Down/Up Ratio"
+    category: derived
+    justification: "Derived: Total Bwd Bytes / Total Fwd Bytes. Depends on server response; treat as derived."
+
+  - index: 54
+    name: "Average Packet Size"
+    category: derived
+    justification: "Derived: Total bytes (fwd+bwd) / Total packets. Changes as consequence of byte/packet perturbations."
+
+  - index: 55
+    name: "Avg Fwd Segment Size"
+    category: derived
+    justification: "Derived: Total Fwd Bytes / Total Fwd Packets. Equivalent to Fwd Packet Length Mean."
+
+  - index: 56
+    name: "Avg Bwd Segment Size"
+    category: backward_response
+    justification: "Derived from backward bytes/packets; server-determined."
+
+  - index: 57
+    name: "Fwd Header Length.1"
+    category: derived
+    justification: "Duplicate of Fwd Header Length (index 36). Derived field."
+
+  - index: 58
+    name: "Fwd Avg Bytes/Bulk"
+    category: bidirectional
+    justification: "Average bytes per bulk transfer in forward direction; attacker controls bulk payload size."
+
+  - index: 59
+    name: "Fwd Avg Packets/Bulk"
+    category: bidirectional
+    justification: "Average packets per bulk in forward direction; attacker can vary bulk packet count."
+
+  - index: 60
+    name: "Fwd Avg Bulk Rate"
+    category: bidirectional
+    justification: "Forward bulk transfer rate; attacker controls via bulk size and timing."
+
+  - index: 61
+    name: "Bwd Avg Bytes/Bulk"
+    category: backward_response
+    justification: "Average backward bytes per bulk; server-determined."
+
+  - index: 62
+    name: "Bwd Avg Packets/Bulk"
+    category: backward_response
+    justification: "Average backward packets per bulk; server-determined."
+
+  - index: 63
+    name: "Bwd Avg Bulk Rate"
+    category: backward_response
+    justification: "Backward bulk rate; server-determined."
+
+  - index: 64
+    name: "Subflow Fwd Packets"
+    category: increase_only
+    justification: "Attacker can add more subflow forward packets; cannot remove already-sent ones."
+
+  - index: 65
+    name: "Subflow Fwd Bytes"
+    category: increase_only
+    justification: "Attacker can add more subflow forward bytes (padding); cannot reduce bytes sent."
+
+  - index: 66
+    name: "Subflow Bwd Packets"
+    category: backward_response
+    justification: "Subflow backward packets; server-determined."
+
+  - index: 67
+    name: "Subflow Bwd Bytes"
+    category: backward_response
+    justification: "Subflow backward bytes; server-determined."
+
+  - index: 68
+    name: "Init_Win_bytes_forward"
+    category: bidirectional
+    justification: "Initial TCP window size advertised by client; attacker sets this in SYN packet, can be any value."
+
+  - index: 69
+    name: "Init_Win_bytes_backward"
+    category: backward_response
+    justification: "Initial TCP window size advertised by server in SYN-ACK; server-determined."
+
+  - index: 70
+    name: "act_data_pkt_fwd"
+    category: increase_only
+    justification: "Count of forward packets with at least 1 byte of payload; attacker can inject more data packets."
+
+  - index: 71
+    name: "min_seg_size_forward"
+    category: bidirectional
+    justification: "Minimum segment size in forward direction; attacker controls by varying TCP segment sizes."
+
+  - index: 72
+    name: "Active Mean"
+    category: increase_only
+    justification: "Mean active time of connection sub-flows; attacker can extend active periods by adding data."
+
+  - index: 73
+    name: "Active Std"
+    category: bidirectional
+    justification: "Variability of active periods; attacker can regularise or randomise activity pattern."
+
+  - index: 74
+    name: "Active Max"
+    category: increase_only
+    justification: "Maximum active sub-flow duration; attacker can create a longer burst of activity."
+
+  - index: 75
+    name: "Active Min"
+    category: bidirectional
+    justification: "Minimum active sub-flow duration; can vary in both directions."
+
+  - index: 76
+    name: "Idle Mean"
+    category: increase_only
+    justification: "Mean idle time between sub-flows; attacker can insert longer idle gaps."
+
+  - index: 77
+    name: "Idle Std"
+    category: bidirectional
+    justification: "Variability of idle periods; attacker can regularise or randomise idle pattern."
+
+  - index: 78
+    name: "Idle Max"
+    category: increase_only
+    justification: "Maximum idle gap; attacker can insert one very long idle period."
+
+  - index: 79
+    name: "Idle Min"
+    category: bidirectional
+    justification: "Minimum idle period; can vary in both directions."
