@@ -1,0 +1,30 @@
+# Phase 3+4: Domain-Grounded Perturbation Budgets + Semantic Constraint Validation
+# Addresses Reviewer #5 (R5): "uniform L∞ ε is domain-ungrounded" and
+#   "semantic constraints described but never empirically validated with violation statistics"
+
+dataset_name: cicids2017
+seed: 42
+max_samples: 20000   # Full Phase 1 test subset
+
+surrogate: lr_surrogate    # Primary attacker (best overall from Phase 1)
+also_run_cnn_v2: false     # Optional second surrogate for CNN1D-targeted analysis
+
+attacks:
+  # Raw generation epsilon — always 0.05 to extract full gradient signal.
+  # Feature-aware constraints are applied POST-generation at each epsilon level.
+  raw_eps: 0.05
+
+  pgd:
+    num_steps: 40
+    step_size: 0.005    # 0.05 / 10
+
+  # Epsilon levels for feature-aware constraints (in normalized [0,1] space)
+  epsilon_levels:
+    low:  0.01    # ~1% of feature range — subtle timing/padding modification
+    med:  0.03    # ~3% — noticeable but operationally plausible
+    high: 0.05    # ~5% — aggressive but within operational limits
+
+bootstrap:
+  n_iterations: 1000
+  confidence: 0.95
+  seed: 42
