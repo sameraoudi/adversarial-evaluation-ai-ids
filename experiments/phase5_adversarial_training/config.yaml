@@ -1,0 +1,71 @@
+# Phase 5: Expanded Adversarial Training
+# Addresses Reviewer #7 (R7): "AT trained only MLP, only PGD, only ε=0.03 → overfitting
+# verification, not mitigation validation."
+
+dataset_name: cicids2017
+seed: 42
+
+# Subsample training data for AT fine-tuning (full 1.98M is too slow)
+# Fine-tuning from pre-trained checkpoint: 200K is sufficient
+at_train_samples: 200000
+val_samples: 20000          # Validation subset for robust accuracy monitoring
+
+surrogate: lr_surrogate     # Frozen surrogate for AT adversarial generation
+
+adversarial_training:
+  epochs: 20
+  early_stopping_patience: 7
+  learning_rate: 0.0005     # Fine-tuning LR (lower than original 0.001)
+  batch_size: 256
+  weight_decay: 0.0001
+  clean_ratio: 0.5          # 50% clean per batch
+  adv_ratio: 0.5            # 50% adversarial per batch
+  use_feature_aware: true   # Apply feature-aware constraints to AT examples
+  amp: true                 # Mixed-precision (AMP) for L40 throughput
+
+  # Attack mixture during training (weights sum to 1.0)
+  training_attacks:
+    - {attack: fgsm, eps: 0.03, weight: 0.4}   # Primary
+    - {attack: pgd,  eps: 0.03, weight: 0.3}   # Iterative
+    - {attack: fgsm, eps: 0.05, weight: 0.2}   # Larger budget
+    - {attack: fgsm, eps: 0.01, weight: 0.1}   # Finer budget
+
+  pgd_train_steps: 10       # Steps during training (fast); 40 used at evaluation
+
+trades:
+  enabled: true
+  epochs: 20
+  early_stopping_patience: 7
+  learning_rate: 0.0005
+  batch_size: 256
+  weight_decay: 0.0001
+  beta: 6.0                 # TRADES KL weight (Zhang et al. 2019)
+  epsilon: 0.03
+  step_size: 0.003
+  perturb_steps: 10
+  amp: true
+
+evaluation:
+  # Full evaluation subset (Phase 1 test subset, 20K)
+  n_eval: 20000
+
+  # Unseen epsilon values (generalization tests G1)
+  eps_seen:    [0.01, 0.03, 0.05]
+  eps_unseen:  [0.07, 0.10]
+  eps_all:     [0.01, 0.03, 0.05, 0.07, 0.10]
+
+  # HSJA evaluation on smaller subset (query-based, slow)
+  hsja_samples: 1000
+  hsja_iterations: 10
+  hsja_binary_search_steps: 10
+
+  # Input smoothing defense evaluation
+  smoothing_noise_std: [0.005, 0.01, 0.02]
+  smoothing_n_samples: [5, 10, 20]
+
+  pgd_eval_steps: 40        # Full PGD for evaluation
+
+bootstrap:
+  n_iterations: 1000
+  confidence: 0.95
+  seed: 42
