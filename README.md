@@ -3,8 +3,7 @@
 A modular, reproducible, research-grade framework for evaluating the adversarial robustness of AI-based intrusion detection systems across multiple datasets, surrogate architectures, attack paradigms, and defense strategies.
 
 **Supplementary Code for:**
-> Aoudi, S., & Al-Aqrabi, H. (2025). *Adversarial Robustness of AI-Based Intrusion Detection Systems: A Multi-Dataset, Multi-Paradigm Evaluation Framework.* Submitted to Computers & Security (Elsevier).
-
+> Aoudi, S., & Al-Aqrabi, H. (2026). *Adversarial Robustness of AI-Based Intrusion Detection Systems: A Multi-Dataset, Multi-Paradigm Evaluation Framework.* Submitted to [TBA].
 ---
 
 ## Overview
@@ -111,7 +110,6 @@ adversarial-evaluation-ai-ids/
 │   ├── phase5_adversarial_training/      # AT, TRADES, smoothing + generalization
 │   ├── phase6_cross_dataset/             # 4-dataset evaluation + cross-transfer
 │   ├── phase7_statistics/                # McNemar, bootstrap, Friedman tests
-│   └── phase8_paper/                     # Manuscript source files
 │
 ├── models/                               # Saved model checkpoints per dataset
 │   ├── cicids2017/{baselines,deep,surrogates}/
@@ -272,9 +270,9 @@ If you use this repository in academic research, please cite:
 @article{aoudi2025adversarial,
   title={Adversarial Robustness of AI-Based Intrusion Detection Systems: 
          A Multi-Dataset, Multi-Paradigm Evaluation Framework},
-  author={Aoudi, Samer and Al-Aqrabi, Hussain},
-  journal={Computers \& Security},
-  year={2025},
+  author={Aoudi, Samer},
+  journal={TBA},
+  year={2026},
   note={Under review}
 }
 ```
