@@ -1,0 +1,72 @@
+# Phase 1: Surrogate Redesign Configuration
+# Fixes the FATAL flaw where the old MLP surrogate was architecturally identical
+# to the target MLP, making MLP-target evaluation near-white-box.
+
+dataset_name: cicids2017
+seed: 42
+max_samples: 20000
+
+# Three new surrogates, all architecturally distinct from all 4 targets (RF, LR, MLP, CNN1D)
+surrogates:
+  lr_surrogate:
+    # PyTorch linear model: Linear(input_dim, num_classes) — differentiable LR
+    # Distinct from: target RF (ensemble), target LR (sklearn, non-differentiable),
+    #   target MLP (256->128 hidden, ReLU), target CNN1D (conv layers)
+    architecture: lr
+    max_epochs: 50
+    lr: 0.01
+    weight_decay: 1e-4
+    batch_size: 2048
+    early_stopping_patience: 10
+
+  gbt_distill_surrogate:
+    # Step 1: Train XGBoost GBT classifier
+    # Step 2: Distil into 2-hidden-layer net (512->256, GELU) — mimics GBT boundaries
+    # Distinct from: target MLP (256->128, ReLU, no distillation training)
+    architecture: gbt_distill
+    # XGBoost params
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    # Distillation net params
+    hidden_dims: [512, 256]
+    activation: gelu
+    dropout: 0.2
+    distill_max_epochs: 50
+    distill_lr: 1e-3
+    distill_weight_decay: 1e-4
+    distill_batch_size: 2048
+    early_stopping_patience: 10
+    temperature: 3.0  # soft label temperature
+
+  cnn_v2_surrogate:
+    # 3-conv-layer CNN: channels [16,32,64], kernel=5, BatchNorm, LeakyReLU, GlobalAvgPool -> FC(64)
+    # Distinct from: target CNN1D (2 conv layers, channels [32,64], kernel=3, ReLU, MaxPool -> FC(64))
+    architecture: cnn_v2
+    channels: [16, 32, 64]
+    kernel_size: 5
+    fc_dim: 64
+    dropout: 0.2
+    max_epochs: 50
+    lr: 1e-3
+    weight_decay: 1e-4
+    batch_size: 2048
+    early_stopping_patience: 10
+
+attacks:
+  eps_list: [0.01, 0.03, 0.05]
+  norm: linf
+
+  fgsm: {}
+
+  pgd:
+    num_steps: 20
+    step_size: 0.005
+    random_start: true
+
+bootstrap:
+  n_iterations: 1000
+  confidence: 0.95
+  seed: 42
